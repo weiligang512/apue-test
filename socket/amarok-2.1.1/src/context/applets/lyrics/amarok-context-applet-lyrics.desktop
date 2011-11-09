@@ -1,0 +1,44 @@
+[Desktop Entry]
+Name=Lyrics
+Name[bg]=Текстове на песни
+Name[ca]=Lletres
+Name[da]=Sangtekster
+Name[de]=Liedtext
+Name[el]=Στίχοι
+Name[es]=Letras
+Name[et]=Sõnad
+Name[eu]=Hitzak
+Name[ga]=Liricí
+Name[it]=Testi
+Name[ja]=歌詞
+Name[km]=អត្ថបទ​ចម្រៀង
+Name[nb]=Sangtekst
+Name[nds]=Leedtexten
+Name[nl]=Liedteksten
+Name[pa]=ਬੋਲ
+Name[pl]=Słowa
+Name[pt]=Letras Musicais
+Name[pt_BR]=Letras
+Name[ro]=Versuri
+Name[ru]=Текст песни
+Name[sl]=Besedilo
+Name[sv]=Sångtext
+Name[tr]=Şarkı Sözleri
+Name[uk]=Текст пісні
+Name[wa]=Paroles
+Name[x-test]=xxLyricsxx
+Type=Service
+ServiceTypes=Plasma/Applet
+
+X-KDE-Library=amarok_context_applet_lyrics
+X-KDE-PluginInfo-Author=Leo Franchi
+X-KDE-PluginInfo-Email=lfranchi@gmail.com
+X-KDE-PluginInfo-Name=lyrics
+X-KDE-PluginInfo-Version=pre0.1
+X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-ParentApp=amarok
+X-KDE-PluginInfo-Category=Current
+

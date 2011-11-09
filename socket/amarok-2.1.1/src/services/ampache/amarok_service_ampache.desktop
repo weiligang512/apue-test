@@ -1,0 +1,68 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KPluginInfo
+Icon=view-services-ampache-amarok
+Name=Ampache
+Name[bg]=Услуга Ampache
+Name[pa]=ਅਮਪਾਂਚੇ
+Name[x-test]=xxAmpachexx
+Comment=Listen to music from an Ampache server
+Comment[bg]=Слушане на музика от Ampache
+Comment[ca]=Escolta música des d'un servidor Ampache
+Comment[cs]=Poslouchejte hudbu ze serveru Ampache
+Comment[da]=Lyt til musik fra en Ampache-server
+Comment[de]=Musik von einem Ampache-Server abspielen
+Comment[el]=Ακρόαση μουσικής από έναν εξυπηρετητή Ampache
+Comment[es]=Escuchar música desde el servidor Ampache
+Comment[et]=Ampache serveri muusika kuulamine
+Comment[eu]=Entzun musika Ampache zerbitzari batetatik
+Comment[fr]=Écouter de la musique provenant d'un serveur Ampache
+Comment[ga]=Éist le ceol ó fhreastalaí Ampache
+Comment[gl]=Escoite música dun servizo Ampache
+Comment[he]=האזנה למוזיקה משרת Ampache
+Comment[is]=Hlusta á tónlist frá Ampache þjóni
+Comment[it]=Ascolta musica da un server Ampache
+Comment[ja]=Ampache サーバから音楽を聴けます
+Comment[km]=ស្ដាប់​តន្ត្រី​ពី​ម៉ាស៊ីន​បម្រើ Ampache
+Comment[ku]=Ji pêşkêşkera Ampache guhdarî ya muzîkê bike
+Comment[lt]=Klausyti muzikos iš Ampache serverio
+Comment[lv]=Klausieties mūziku no Ampache servera
+Comment[nb]=Lytt til musikk fra en Ampache-tjener
+Comment[nds]=Musik vun en Ampache-Server tohören
+Comment[nl]=Luister naar muziek vanaf een Ampache-server
+Comment[nn]=Høyr på musikk frå ein Ampache-tenar
+Comment[pl]=Słuchaj muzyki z serwera Ampache
+Comment[pt]=Ouvir música de um servidor Ampache
+Comment[pt_BR]=Ouça música de um servidor Ampache
+Comment[ro]=Ascultă muzică de pe un server Ampache
+Comment[ru]=Прослушивание музыки с сервера Ampache
+Comment[sl]=Poslušajte glasbo s strežnika Ampache
+Comment[sv]=Lyssna på musik från en Ampache-server
+Comment[th]=ฟังดนตรีจากบริการ Ampache
+Comment[tr]=Bir Ampache sunucudan müzik dinle
+Comment[uk]=Прослуховування музики з сервера Ampache
+Comment[wa]=Schoûter del muzike d' on sierveu Ampache
+Comment[x-test]=xxListen to music from an Ampache serverxx
+Comment[zh_CN]=从 Ampache 服务聆听音乐
+
+
+ServiceTypes=Amarok/Plugin
+
+
+X-KDE-Amarok-authors=Nikolaj Hald Nielsen
+X-KDE-Amarok-email=nhnFreespirit@gmail.com
+X-KDE-Amarok-framework-version=43
+X-KDE-Amarok-name=AmpacheService
+X-KDE-Amarok-plugintype=service
+X-KDE-Amarok-rank=100
+X-KDE-Amarok-version=1
+
+X-KDE-PluginInfo-Author=Nikolaj Hald Nielsen
+X-KDE-PluginInfo-Email=nhnFreespirit@gmail.com
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Category=Service
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=false
+X-KDE-Library=amarok_service_ampache
+X-KDE-PluginInfo-Name=amarok_service_ampache
+

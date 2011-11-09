@@ -1,0 +1,523 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <errno.h>
+
+//--------------------------------------------------------------------
+// Macro defintion
+//--------------------------------------------------------------------
+#define BUFFER_SIZE	1024
+
+//--------------------------------------------------------------------
+// Type definition
+//--------------------------------------------------------------------
+typedef struct
+{
+  char *data;
+  uint32_t size;
+  uint32_t payload_length;
+} buf_t;
+
+typedef struct
+{
+  buf_t *rbuf;
+  buf_t *sbuf;
+} conn_t;
+
+//--------------------------------------------------------------------
+// Global variables
+//--------------------------------------------------------------------
+fd_set global_read_set, global_write_set, global_except_set;
+int global_max_fd = 0;
+
+conn_t **global_conn_list = NULL;
+int global_conn_list_num = 0;
+
+//--------------------------------------------------------------------
+// Function prototype
+//--------------------------------------------------------------------
+void net_init(void);
+void net_register_read(int fd);
+void net_unregister_read(int fd);
+void net_register_write(int fd);
+void net_unregister_write(int fd);
+void net_register_except(int fd);
+void net_unregister_except(int fd);
+
+void do_extra_job(void);
+
+void *utils_safe_malloc(uint32_t n);
+void utils_safe_free(void *p);
+
+int init_conn_list(int n);
+void destroy_conn_list(void);
+
+conn_t *create_conn_object(void);
+void destroy_conn_object(conn_t * c);
+
+buf_t *create_buf_object(void);
+void destroy_buf_object(buf_t * b);
+
+//--------------------------------------------------------------------
+// Main function
+//--------------------------------------------------------------------
+int main(int argc, char **argv)
+{
+  int listening_socket;
+  unsigned short port;
+  int backlog;
+
+  //------------------------------------------------------------------
+  // Initialize global_conn_list
+  //------------------------------------------------------------------
+  init_conn_list(1024);
+
+  //------------------------------------------------------------------
+  // Initialize global_read_set, global_write_set, global_except_set
+  // Initialize global_max_fd
+  //------------------------------------------------------------------
+  net_init();
+
+  //------------------------------------------------------------------
+  // Parse command line arguments
+  //------------------------------------------------------------------
+  port = (unsigned short) strtol(argv[2], NULL, 10);
+  backlog = (int) strtol(argv[3], NULL, 10);
+
+  //------------------------------------------------------------------
+  // step 1, create socket
+  //------------------------------------------------------------------
+  //int socket(int domain, int type, int protocol);
+  if ((listening_socket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+  {
+    fprintf(stderr, "Failed to create new TCP socket: %s\n", strerror(errno));
+    exit(1);
+  }
+
+  fprintf(stdout, "Created a new TCP socket, listening_socket = %d\n", listening_socket);
+
+  //------------------------------------------------------------------
+  // Set SO_REUSEADDR & SO_REUSEPORT options
+  //------------------------------------------------------------------
+  int optval;
+
+  optval = 1;
+  //int setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+  setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+#ifdef SO_REUSEPORT
+  optval = 1;
+  //int setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen);
+  setsockopt(listening_socket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+#endif
+
+  //------------------------------------------------------------------
+  // step 2, bind
+  //------------------------------------------------------------------
+  struct sockaddr_in local_ipv4_address;
+
+  memset(&local_ipv4_address, 0, sizeof(local_ipv4_address));
+
+  local_ipv4_address.sin_family = AF_INET;
+  local_ipv4_address.sin_port = htons(port);	// network byte order
+
+  //int inet_pton(int af, const char *src, void *dst);
+  inet_pton(AF_INET, argv[1], &local_ipv4_address.sin_addr);
+
+  //int bind(int sockfd, const struct sockaddr *my_addr, socklen_t addrlen);
+  if (bind(listening_socket, (struct sockaddr *) &local_ipv4_address, sizeof(local_ipv4_address)) < 0)
+  {
+    // failed
+    fprintf(stderr, "Bind to %s:%d failed: %s\n", argv[1], port, strerror(errno));
+    close(listening_socket);
+    exit(1);
+  }
+
+  fprintf(stdout, "Bound to %s:%d successfully.\n", argv[1], port);
+
+  //------------------------------------------------------------------
+  // step 3, listen
+  //------------------------------------------------------------------
+  //int listen(int sockfd, int backlog);
+  if (listen(listening_socket, backlog) < 0)
+  {
+    // failed
+    fprintf(stderr, "Listen on %s:%d failed: %s\n", argv[1], port, strerror(errno));
+    close(listening_socket);
+    exit(1);
+  }
+
+  fprintf(stdout, "Listen on %s:%d successfully.\n", argv[1], port);
+
+  int n;
+  fd_set rset, wset, eset;
+  struct timeval to;
+
+  //------------------------------------------------------------------
+  // Add listening_socket to global_read_set
+  //------------------------------------------------------------------
+  net_register_read(listening_socket);
+
+  //------------------------------------------------------------------
+  // Main loop
+  //------------------------------------------------------------------
+  for (;;)
+  {
+    rset = global_read_set;
+    wset = global_write_set;
+    eset = global_except_set;
+
+    to.tv_sec = 1;
+    to.tv_usec = 0;
+
+    //int select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * exceptfds, struct timeval *timeout);
+    if ((n = select(global_max_fd + 1, &rset, &wset, &eset, &to)) < 0)
+    {
+      // failed
+      if (errno == EINTR)
+      {
+	continue;
+      }
+      else
+      {
+	fprintf(stderr, "select() failed: %s\n", strerror(errno));
+	break;
+      }
+    }
+    else if (n == 0)
+    {
+      // timeout
+      fprintf(stdout, "timeout ...\n");
+      do_extra_job();
+    }
+    else
+    {
+      // ready
+      int i;
+
+      for (i = 0; i <= global_max_fd; i++)
+      {
+	//int FD_ISSET(int fd, fd_set * set);
+	if (FD_ISSET(i, &rset))
+	{
+	  //----------------------------------------------------------
+	  // ready to read
+	  //----------------------------------------------------------
+	  if (i == listening_socket)
+	  {
+	    //--------------------------------------------------------
+	    // accept new connection
+	    //--------------------------------------------------------
+	    int new_connected_socket;
+	    struct sockaddr_in peer_ipv4_address;
+	    socklen_t peer_ipv4_address_length;
+	    char peer_ipv4_address_string[] = "xxx.xxx.xxx.xxx\0";
+
+	    peer_ipv4_address_length = sizeof(peer_ipv4_address);
+
+	    //int accept(int sockfd, struct sockaddr *addr, socklen_t * addrlen);
+	    if ((new_connected_socket = accept(listening_socket, (struct sockaddr *) &peer_ipv4_address, &peer_ipv4_address_length)) < 0)
+	    {
+	      // failed
+	      fprintf(stderr, "accept() failed: %s\n", strerror(errno));
+	      //FIXME: How to do?
+	    }
+	    else
+	    {
+	      memset(peer_ipv4_address_string, 0, sizeof(peer_ipv4_address_string));
+
+	      //const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+	      inet_ntop(AF_INET, &peer_ipv4_address.sin_addr, peer_ipv4_address_string, sizeof(peer_ipv4_address_string));
+
+	      fprintf(stdout, "Accepted a new connection %d from %s:%d\n", new_connected_socket, peer_ipv4_address_string, ntohs(peer_ipv4_address.sin_port));
+
+	      // create new conn_t object
+	      conn_t *new_conn_object;
+
+	      new_conn_object = create_conn_object();
+
+	      if (new_conn_object == NULL)
+	      {
+		fprintf(stderr, "Fatal error: Cannot allocate resource for new connection, give up.\n");
+		close(new_connected_socket);
+	      }
+	      else
+	      {
+		// attach to global_conn_list
+		global_conn_list[new_connected_socket] = new_conn_object;
+
+		net_register_read(new_connected_socket);
+		//net_register_write(new_connected_socket);
+		//net_register_except(new_connected_socket);
+	      }
+	    }
+	  }
+	  else
+	  {
+	    // i is connected socket, read data
+	    fprintf(stdout, "socket %d is ready to read.\n", i);
+	  }
+	}
+
+	//int FD_ISSET(int fd, fd_set * set);
+	if (FD_ISSET(i, &wset))
+	{
+	  // ready to write
+	  fprintf(stdout, "socket %d is ready to write.\n", i);
+	}
+
+#if 0
+	//int FD_ISSET(int fd, fd_set * set);
+	if (FD_ISSET(i, &eset))
+	{
+	  // exception
+	}
+#endif
+      }
+    }
+  }
+
+  close(listening_socket);
+
+  return 0;
+}
+
+void net_init(void)
+{
+  FD_ZERO(&global_read_set);
+  FD_ZERO(&global_write_set);
+  FD_ZERO(&global_except_set);
+
+  global_max_fd = 0;
+}
+
+void net_register_read(int fd)
+{
+  FD_SET(fd, &global_read_set);
+
+  if (fd > global_max_fd)
+  {
+    global_max_fd = fd;
+  }
+}
+
+void net_unregister_read(int fd)
+{
+  FD_CLR(fd, &global_read_set);
+}
+
+void net_register_write(int fd)
+{
+  FD_SET(fd, &global_write_set);
+
+  if (fd > global_max_fd)
+  {
+    global_max_fd = fd;
+  }
+}
+
+void net_unregister_write(int fd)
+{
+  FD_CLR(fd, &global_write_set);
+}
+
+void net_register_except(int fd)
+{
+  FD_SET(fd, &global_except_set);
+
+  if (fd > global_max_fd)
+  {
+    global_max_fd = fd;
+  }
+}
+
+void net_unregister_except(int fd)
+{
+  FD_CLR(fd, &global_except_set);
+}
+
+void do_extra_job(void)
+{
+  fprintf(stdout, "Do extra job ...\n");
+}
+
+int init_conn_list(int n)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s()\n", __func__);
+#endif
+  uint32_t total = n * sizeof(conn_t *);
+
+  global_conn_list = utils_safe_malloc(total);
+
+  if (global_conn_list == NULL)
+  {
+    return -1;
+  }
+
+  int i;
+
+  for (i = 0; i < n; i++)
+  {
+    global_conn_list[i] = NULL;
+  }
+
+  global_conn_list_num = n;
+
+  return 0;
+}
+
+conn_t *create_conn_object(void)
+{
+  conn_t *c;
+
+  c = utils_safe_malloc(sizeof(conn_t));
+
+  if (!c)
+  {
+    return NULL;
+  }
+
+  c->rbuf = create_buf_object();
+  c->sbuf = create_buf_object();
+
+  if (!c->rbuf || !c->sbuf)
+  {
+    destroy_buf_object(c->rbuf);
+    destroy_buf_object(c->sbuf);
+
+    utils_safe_free(c);
+
+    return NULL;
+  }
+
+  return c;
+}
+
+void destroy_conn_object(conn_t * c)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s()\n", __func__);
+#endif
+
+  if (c)
+  {
+    // free rbuf
+    destroy_buf_object(c->rbuf);
+
+    // free sbuf
+    destroy_buf_object(c->sbuf);
+
+    // free c
+    utils_safe_free(c);
+
+    c = NULL;
+  }
+}
+
+buf_t *create_buf_object(void)
+{
+  buf_t *p = utils_safe_malloc(sizeof(buf_t));
+
+  if (!p)
+  {
+    return NULL;
+  }
+
+  p->data = utils_safe_malloc(BUFFER_SIZE);
+
+  if (!p->data)
+  {
+    utils_safe_free(p);
+    return NULL;
+  }
+
+  p->size = BUFFER_SIZE;
+  p->payload_length = 0;
+
+  return p;
+}
+
+void destroy_buf_object(buf_t * b)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s()\n", __func__);
+#endif
+  if (b)
+  {
+    // free data
+    utils_safe_free(b->data);
+
+    // free b
+    utils_safe_free(b);
+
+    b = NULL;
+  }
+}
+
+void destroy_conn_list(void)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s()\n", __func__);
+#endif
+
+  int i;
+
+  for (i = 0; i < global_conn_list_num; i++)
+  {
+    if (global_conn_list[i])
+    {
+      // free conn_t
+      destroy_conn_object(global_conn_list[i]);
+
+      // free node
+      utils_safe_free(global_conn_list[i]);
+    }
+  }
+
+  if (global_conn_list)
+  {
+    // free list
+    free(global_conn_list);
+    global_conn_list = NULL;
+  }
+
+  global_conn_list_num = -1;
+}
+
+//--------------------------------------------------------------------
+// Utilities functions
+//--------------------------------------------------------------------
+void *utils_safe_malloc(uint32_t n)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s(%d)", __func__, n);
+#endif
+
+  void *p = malloc(n);
+
+  if (p == NULL)
+  {
+    return NULL;
+  }
+
+  return p;
+}
+
+void utils_safe_free(void *p)
+{
+#ifdef _DEBUG_TRACE_
+  fprintf(stdout, "call %s(%p)", __func__, p);
+#endif
+
+  if (p)
+  {
+    free(p);
+    p = NULL;
+  }
+}

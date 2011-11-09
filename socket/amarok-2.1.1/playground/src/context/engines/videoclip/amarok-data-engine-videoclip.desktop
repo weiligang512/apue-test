@@ -1,0 +1,27 @@
+[Desktop Entry]
+Name=Video Clip Data Engine
+Name[bg]=Ядро за видеоклип
+Name[ca]=Motor de dades de video clip
+Name[da]=Datamotor til videoklip
+Name[de]=Videoclip-Datenmodul
+Name[et]=Videoklipi andmete mootor
+Name[it]=Motore dati Video Clip
+Name[km]=ម៉ាស៊ីន​ទិន្នន័យ​ឈុត​វីដេអូ
+Name[nl]=Videoclip-gegevensengine
+Name[pa]=ਵੀਡਿਓ ਕਲਿੱਪ ਡਾਟਾ ਇੰਜਣ
+Name[pl]=Moduł danych klipów wideo
+Name[pt]=Motor de Dados de 'Clips' de Vídeo
+Name[pt_BR]=Motor de dados de clipe de vídeo
+Name[ru]=Движок данных для видеоклипов
+Name[sl]=Podatkovni pogon za video posnetke
+Name[sv]=Datagränssnitt för videoklipp
+Name[tr]=Video Klibi Veri Motoru
+Name[uk]=Рушій даних відеокліпів
+Name[wa]=Éndjin d' dinêyes Clip Videyo
+Name[x-test]=xxVideo Clip Data Enginexx
+X-KDE-ServiceTypes=Plasma/DataEngine
+X-KDE-ParentApp=Amarok
+Type=Service
+Icon=VideoClip
+X-KDE-Library=amarok_data_engine_videoclip
+X-KDE-PluginInfo-Name=amarok-videoclip

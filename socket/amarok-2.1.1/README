@@ -1,0 +1,142 @@
+
+ Amarok - the audio player for KDE
+===================================
+
+There are many media players around these days, true. What's missing from most
+players is a user interface that doesn't get in the way of the user. How many
+buttons do you have to press for simply adding some new tracks to the playlist?
+Amarok tries to be a little different, providing a simple drag and drop
+interface that really makes playlist handling easy.
+
+
+ FEATURES
+==========
+
+    * Quick and simple drag and drop playlist creation
+    * Music library
+    * Cross platform. Support for Unix, MacOS X and Windows.
+    * Plays all audio formats known to man
+    * Cover art download using Amazon services
+    * Automatic play-statistics generation (iRate style)
+    * Full lyrics download
+    * Learn about your music with integrated Wikipedia
+    * Full Last.fm support
+    * Fully configurable on screen display for track changes
+    * Podcast support
+    * iPod support
+    * Powerful scripting interface
+    * KDE integration
+    * Integration with multiple web sources, Magnatune, Jamendo, Ampache and Mp3tunes 
+      among others.
+--------------------------------------------------------------------------------
+
+
+ DEPENDENCIES
+==============
+
+Required
+    * KDE-Libs 4.2 + KDE-Base-runtime 4.2 (or newer)
+      http://www.kde.org
+
+    * TagLib 1.5 (or newer)
+      (Metadata tagging library)
+      http://freshmeat.net/projects/taglib
+
+    * TagLib Extras 0.1.3 (or newer)
+      (Support for metadata reading of additional file types)
+      http://www.kollide.net/~jefferai/taglib-extras-0.1.3.tar.gz
+      svn://anonsvn.kde.org/home/kde/trunk/kdesupport/taglib-extras
+
+    * MySQL 5.0 (possibly 5.1.26rc) Embedded: libmysqld compiled with fPIC
+      (In-process database support)
+
+    * QtScript Generator, Qt Bindings 0.1.0
+      (Qt Bindings for QtScript for Amarok's scripting system)
+      http://code.google.com/p/qtscriptgenerator/
+      git://labs.trolltech.com/qtscriptgenerator
+
+Optional
+    * libgpod 0.4.2 (or newer)
+      (iPod support)
+      http://www.gtkpod.org/libgpod.html
+
+    * libmp4v2 (mpeg4ip 1.5 is recommended, faad2 is less reliable)
+      (MP4/AAC tag reading & writing)
+      http://www.sf.net/projects/mpeg4ip
+      http://www.audiocoding.com
+
+    * Mp3tunes.com integration (including syncronization) requires:
+      * OpenSSL http://www.openssl.org
+      * libxml2 http://xmlsoft.org
+      * libcurl http://curl.haxx.se
+      * Glib2 http://www.gtk.org
+      * Loudmouth, the Jabber library, http://www.loudmouth-project.org/
+      * Qt must be compiled with Glib enabled
+
+
+Please note, if compiling from source you must also install the devel versions
+of these packages.
+--------------------------------------------------------------------------------
+
+
+ IMPORTANT INSTALL INSTRUCTIONS
+================================
+
+To compile from source, please refer to the INSTALL file.
+
+Packages for popular distributions are available at http://amarok.kde.org
+--------------------------------------------------------------------------------
+
+
+ FURTHER RESOURCES
+===================
+
+For answers to problems like "Amarok won't play any MP3s!" and "My MP3s skip
+and stutter!" please visit:
+
+   http://amarok.kde.org/
+--------------------------------------------------------------------------------
+
+
+ INFORMATION FOR PACKAGERS
+===========================
+
+It is possible to build Amarok to use MySQL as the database backend. Using
+MySQL makes the Amarok collection faster.
+
+In order to limit the dependencies the Amarok package demands we suggest
+splitting Amarok into the following packages:
+
+   1. Amarok + Phonon Engine
+   2. iPod media device
+   3. MTP media device
+
+Amarok is modular and will be fully functional as long as one of 2 or 3 is
+also installed. Hence we suggest Amarok + one backend.
+
+If you make packages for Amarok please let us know and we'll link to you on the
+homepage (as long as you don't object).
+--------------------------------------------------------------------------------
+
+
+ CONTRIBUTING
+==============
+
+If you wish to contribute to Amarok, you should build it from SVN and subscribe
+to the amarok AT kde.org mailing list. The IRC channel is also a place where
+it's  nice  to  be, since you can talk to other developers much easier, and
+get instant notification of commits to the SVN. For instant email notification
+of commits, visit http://commitfilter.kde.org/ and http://amarok.be/fisheye
+provides a slightly-less-instant overview.
+
+More info at:
+http://amarok.kde.org/wiki/Development/Join
+
+See you in IRC!
+
+--------------------------------------------------------------------------------
+
+WWW:  http://amarok.kde.org
+MAIL: amarok@kde.org
+IRC:  irc.freenode.net - #amarok, #amarok.de, #amarok.es, #amarok.fr
+

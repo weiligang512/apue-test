@@ -10,6 +10,7 @@
 #define TRUE !0
 #define FLASE 0
 
+
 int main(int argc, char **argv)
 {
 	int old_fd, new_fd;
@@ -69,3 +70,4 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+

@@ -11,4 +11,4 @@ TARGETS = cp
 all: $(TARGETS)
 
 clean:
-	rm -f *.o $(TARGETS) *.file
+	rm -f *.o $(TARGETS) *.file *~
